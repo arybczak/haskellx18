@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2010 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  Original slides: Marcin Wichary (mwichary@google.com)
+  Modifications: Ernest Delgado (ernestd@google.com)
+                 Alex Russell (slightlyoff@chromium.org)
+
+  landslide modifications: Adam Zapletal (adamzap@gmail.com)
+                           Nicolas Perriault (nperriault@gmail.com)
+-->
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Profunctors and data accessors</title>
+    <!-- Styles -->
+    
+    <link rel="stylesheet" media="print" href="file:///usr/lib/python2.7/site-packages/landslide/themes/default/css/print.css">
+    <link rel="stylesheet" media="screen, projection" href="file:///usr/lib/python2.7/site-packages/landslide/themes/default/css/screen.css">
+    
+    
+    <!-- /Styles -->
+    <!-- Javascripts -->
+    
+    <script type="text/javascript" src="file:///usr/lib/python2.7/site-packages/landslide/themes/default/js/slides.js"></script>
+    
+    
+    
+    <!-- /Javascripts -->
+</head>
+<body>
+  <div id="blank"></div>
+  <div class="presentation">
+    <div id="current_presenter_notes">
+      <div id="presenter_note"></div>
+    </div>
+    <div class="slides">
+      
+      <!-- slide source: profunctors.rst -->
+      <div class="slide-wrapper">
+        <div class="slide slide-1">
+          <div class="inner">
+            
+            <header><h1>Profunctors and data accessors</h1></header>
+            
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.rst">profunctors.rst</a>
+            </aside>
+            
+            <aside class="page_number">
+              1/7
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.rst -->
+      <div class="slide-wrapper">
+        <div class="slide slide-2">
+          <div class="inner">
+            
+            <header><h1>Profunctor</h1></header>
+            
+            
+            <section><p>Represented by a type class. In order to arrive at the definition, we need to backtrack a little bit.</p></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.rst">profunctors.rst</a>
+            </aside>
+            
+            <aside class="page_number">
+              2/7
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.rst -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-3">
+          <div class="inner">
+            
+            <header><h1>Covariant functor</h1></header>
+            
+            
+            <section><p>A type class we all know and appreciate.</p>
+<div class="highlight"><pre><span></span><span class="kr">class</span> <span class="kt">Functor</span> <span class="p">(</span><span class="n">f</span> <span class="ow">::</span> <span class="kt">Type</span> <span class="ow">-&gt;</span> <span class="kt">Type</span><span class="p">)</span> <span class="kr">where</span>
+  <span class="n">fmap</span> <span class="ow">::</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">b</span>
+</pre></div>
+
+<ul class="simple">
+<li>Intuitively <cite>f a</cite> will <strong>output</strong> values of type <cite>a</cite> in a context specific to <cite>f</cite>.</li>
+<li><cite>fmap</cite> allows us to map over <cite>f</cite> to change the type of its <strong>output</strong>.</li>
+<li>We say that the argument <cite>a</cite> in <cite>f a</cite> is covariant.</li>
+</ul>
+<p>Examples: <cite>Identity</cite>, <cite>Maybe</cite>, <cite>IO</cite>, <cite>Either a</cite>.</p></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.rst">profunctors.rst</a>
+            </aside>
+            
+            <aside class="page_number">
+              3/7
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.rst -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-4">
+          <div class="inner">
+            
+            <header><h1>Contravariant functor</h1></header>
+            
+            
+            <section><p>Significantly less popular.</p>
+<div class="highlight"><pre><span></span><span class="kr">class</span> <span class="kt">Contravariant</span> <span class="p">(</span><span class="n">f</span> <span class="ow">::</span> <span class="kt">Type</span> <span class="ow">-&gt;</span> <span class="kt">Type</span><span class="p">)</span> <span class="kr">where</span>
+  <span class="n">contramap</span> <span class="ow">::</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">b</span>
+</pre></div>
+
+<ul class="simple">
+<li>Intuitively <cite>f a</cite> will take values of type <cite>a</cite> as an <strong>input</strong> in a context specific to <cite>f</cite>.</li>
+<li><cite>contramap</cite> allows us to map over <cite>f</cite> to change the type of its <strong>input</strong>.</li>
+<li>We say that the argument <cite>a</cite> in <cite>f a</cite> is contravariant.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><span class="kr">newtype</span> <span class="kt">Pred</span> <span class="n">a</span> <span class="ow">=</span> <span class="kt">Pred</span> <span class="p">{</span> <span class="n">runPred</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span> <span class="p">}</span>
+
+<span class="kr">instance</span> <span class="kt">Contravariant</span> <span class="kt">Pred</span> <span class="kr">where</span>
+  <span class="n">contramap</span> <span class="n">f</span> <span class="p">(</span><span class="kt">Pred</span> <span class="n">p</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">Pred</span> <span class="p">(</span><span class="n">p</span> <span class="o">.</span> <span class="n">f</span><span class="p">)</span>
+
+<span class="nf">isEven</span> <span class="ow">::</span> <span class="kt">Pred</span> <span class="kt">Int</span>
+<span class="nf">isEven</span> <span class="ow">=</span> <span class="kt">Pred</span> <span class="p">((</span><span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">.</span> <span class="p">(`</span><span class="n">rem</span><span class="p">`</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="nf">isLengthEven</span> <span class="ow">::</span> <span class="kt">Pred</span> <span class="kt">String</span>
+<span class="nf">isLengthEven</span> <span class="ow">=</span> <span class="n">contramap</span> <span class="n">length</span> <span class="n">isEven</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.rst">profunctors.rst</a>
+            </aside>
+            
+            <aside class="page_number">
+              4/7
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.rst -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-5">
+          <div class="inner">
+            
+            <header><h1>Profunctor</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span></span><span class="kr">class</span> <span class="kt">Profunctor</span> <span class="p">(</span><span class="n">p</span> <span class="ow">::</span> <span class="kt">Type</span> <span class="ow">-&gt;</span> <span class="kt">Type</span> <span class="ow">-&gt;</span> <span class="kt">Type</span><span class="p">)</span> <span class="kr">where</span>
+  <span class="n">dimap</span> <span class="ow">::</span> <span class="p">(</span><span class="n">a&#39;</span> <span class="ow">-&gt;</span> <span class="n">a</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">b&#39;</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">p</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">p</span> <span class="n">a&#39;</span> <span class="n">b&#39;</span>
+</pre></div>
+
+<p>An instance of a profunctor is a type <cite>p a b</cite> where the first argument is contravariant and the second argument is covariant.</p>
+<p>Intuitively it is a transformer that consumes values of type <cite>a</cite> and produces values of type <cite>b</cite>.</p>
+<p>Canonical example:</p>
+<div class="highlight"><pre><span></span><span class="kr">instance</span> <span class="kt">Profunctor</span> <span class="p">(</span><span class="ow">-&gt;</span><span class="p">)</span> <span class="kr">where</span>
+  <span class="n">dimap</span> <span class="n">i</span> <span class="n">o</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">o</span> <span class="o">.</span> <span class="n">f</span> <span class="o">.</span> <span class="n">i</span>
+</pre></div>
+
+<p>More interesting example (foldl package):</p>
+<div class="highlight"><pre><span></span><span class="kr">data</span> <span class="kt">Fold</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="n">forall</span> <span class="n">s</span><span class="o">.</span> <span class="kt">Fold</span> <span class="p">(</span><span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">s</span><span class="p">)</span> <span class="n">s</span> <span class="p">(</span><span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">b</span><span class="p">)</span>
+
+<span class="kr">instance</span> <span class="kt">Profunctor</span> <span class="kt">Fold</span> <span class="kr">where</span>
+  <span class="n">dimap</span> <span class="n">f</span> <span class="n">g</span> <span class="p">(</span><span class="kt">Fold</span> <span class="n">step</span> <span class="n">begin</span> <span class="n">extract</span><span class="p">)</span> <span class="ow">=</span>
+    <span class="kt">Fold</span> <span class="p">(</span><span class="nf">\</span><span class="n">s</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">step</span> <span class="n">s</span> <span class="p">(</span><span class="n">f</span> <span class="n">a</span><span class="p">))</span> <span class="n">begin</span> <span class="p">(</span><span class="n">g</span> <span class="o">.</span> <span class="n">extract</span><span class="p">)</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.rst">profunctors.rst</a>
+            </aside>
+            
+            <aside class="page_number">
+              5/7
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.rst -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-6">
+          <div class="inner">
+            
+            <header><h1>Functors that went pro</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span></span><span class="kr">newtype</span> <span class="kt">P1</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">P1</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="kr">newtype</span> <span class="kt">P2</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">P2</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="kr">newtype</span> <span class="kt">P3</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">P3</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="nb">()</span><span class="p">)</span>
+</pre></div>
+
+<p>Which of the above are profunctors?</p></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.rst">profunctors.rst</a>
+            </aside>
+            
+            <aside class="page_number">
+              6/7
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.rst -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-7">
+          <div class="inner">
+            
+            <header><h1>Functors that went pro</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span></span><span class="kr">newtype</span> <span class="kt">P1</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">P1</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="kr">newtype</span> <span class="kt">P2</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">P2</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="kr">newtype</span> <span class="kt">P3</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">P3</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="nb">()</span><span class="p">)</span>
+</pre></div>
+
+<p>Which of the above are profunctors?</p>
+<p>All of them:</p>
+<div class="highlight"><pre><span></span><span class="kr">instance</span> <span class="kt">Profunctor</span> <span class="kt">P1</span> <span class="kr">where</span>
+  <span class="n">dimap</span> <span class="n">i</span> <span class="n">o</span> <span class="p">(</span><span class="kt">P1</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">P1</span> <span class="o">$</span> <span class="p">(</span><span class="nf">\</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">o</span> <span class="n">b1</span><span class="p">,</span> <span class="n">o</span> <span class="n">b2</span><span class="p">))</span> <span class="o">.</span> <span class="n">f</span> <span class="o">.</span> <span class="n">i</span>
+
+<span class="kr">instance</span> <span class="kt">Profunctor</span> <span class="kt">P2</span> <span class="kr">where</span>
+  <span class="n">dimap</span> <span class="n">i</span> <span class="n">o</span> <span class="p">(</span><span class="kt">P2</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">P2</span> <span class="o">$</span> <span class="p">(</span><span class="nf">\</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">o</span> <span class="n">r</span><span class="p">))</span> <span class="o">.</span> <span class="n">f</span> <span class="o">.</span> <span class="n">i</span>
+
+<span class="kr">instance</span> <span class="kt">Profunctor</span> <span class="kt">P3</span> <span class="kr">where</span>
+  <span class="n">dimap</span> <span class="n">i</span> <span class="kr">_</span> <span class="p">(</span><span class="kt">P3</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">P3</span> <span class="o">$</span> <span class="n">f</span> <span class="o">.</span> <span class="n">i</span>
+</pre></div>
+
+<p>This can be generalized to any functor <cite>f</cite>:</p>
+<div class="highlight"><pre><span></span><span class="kr">newtype</span> <span class="kt">UpStar</span> <span class="n">f</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">UpStar</span> <span class="p">{</span> <span class="n">unUpStar</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">b</span> <span class="p">}</span>
+
+<span class="kr">instance</span> <span class="kt">Functor</span> <span class="n">f</span> <span class="ow">=&gt;</span> <span class="kt">Profunctor</span> <span class="p">(</span><span class="kt">UpStar</span> <span class="n">f</span><span class="p">)</span> <span class="kr">where</span>
+  <span class="n">dimap</span> <span class="n">i</span> <span class="n">o</span> <span class="p">(</span><span class="kt">UpStar</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">UpStar</span> <span class="o">$</span> <span class="n">fmap</span> <span class="n">o</span> <span class="o">.</span> <span class="n">f</span> <span class="o">.</span> <span class="n">i</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.rst">profunctors.rst</a>
+            </aside>
+            
+            <aside class="page_number">
+              7/7
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  <div id="toc" class="sidebar hidden">
+    <h2>Table of Contents</h2>
+    <table>
+      <caption>Table of Contents</caption>
+      
+      <tr id="toc-row-1">
+        <th><a href="#slide1">Profunctors and data accessors</a></th>
+        <td><a href="#slide1">1</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-2">
+        <th><a href="#slide2">Profunctor</a></th>
+        <td><a href="#slide2">2</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-3">
+        <th><a href="#slide3">Covariant functor</a></th>
+        <td><a href="#slide3">3</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-4">
+        <th><a href="#slide4">Contravariant functor</a></th>
+        <td><a href="#slide4">4</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-5">
+        <th><a href="#slide5">Profunctor</a></th>
+        <td><a href="#slide5">5</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-6">
+        <th><a href="#slide6">Functors that went pro</a></th>
+        <td><a href="#slide6">6</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-7">
+        <th><a href="#slide7">Functors that went pro</a></th>
+        <td><a href="#slide7">7</a></td>
+      </tr>
+      
+      
+    </table>
+  </div>
+  
+  <div id="help" class="sidebar hidden">
+    <h2>Help</h2>
+    <table>
+      <caption>Help</caption>
+      <tr>
+        <th>Table of Contents</th>
+        <td>t</td>
+      </tr>
+      <tr>
+        <th>Exposé</th>
+        <td>ESC</td>
+      </tr>
+      <tr>
+        <th>Full screen slides</th>
+        <td>e</td>
+      </tr>
+      <tr>
+        <th>Presenter View</th>
+        <td>p</td>
+      </tr>
+      <tr>
+        <th>Source Files</th>
+        <td>s</td>
+      </tr>
+      <tr>
+        <th>Slide Numbers</th>
+        <td>n</td>
+      </tr>
+      <tr>
+        <th>Toggle screen blanking</th>
+        <td>b</td>
+      </tr>
+      <tr>
+        <th>Show/hide slide context</th>
+        <td>c</td>
+      </tr>
+      <tr>
+        <th>Notes</th>
+        <td>2</td>
+      </tr>
+      <tr>
+        <th>Help</th>
+        <td>h</td>
+      </tr>
+    </table>
+  </div>
+  <script>main()</script>
+</body>
+</html>
