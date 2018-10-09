@@ -131,7 +131,7 @@ instance Applicative f => Cocartesian (Star f) where
 
 ----
 
-class (Cartesian p, Cocartesian p) => Wander p where
+class Wander p where
   wander :: (forall f. Applicative f => (a -> f b) -> s -> f t)
          -> p a b
          -> p s t
@@ -232,6 +232,12 @@ _Right = prismP $ Prism match Right
 
 ----
 
+traversalP :: Traversal a b s t -> TraversalP a b s t
+traversalP = wander
+
+traversal :: TraversalP a b s t -> Traversal a b s t
+traversal = traverseOf
+
 traversed :: Traversable t => TraversalP a b (t a) (t b)
 traversed = wander traverse
 
@@ -251,17 +257,20 @@ type LensP a b s t = forall p. Cartesian p => Optic p a b s t
 
 type PrismP a b s t = forall p. Cocartesian p => Optic p a b s t
 
-type TraversalP a b s t = forall p. Wander p => Optic p a b s t
-
---type Getter s t a b = Optic (Star (Const a)) s t a b
+type TraversalP a b s t = forall p. (Cartesian p, Cocartesian p, Wander p) => Optic p a b s t
 
 ----
 
-newtype Traversal a b s t =
-  Traversal (forall f. Applicative f => (a -> f b) -> s -> f t)
+type Traversal a b s t = forall f. Applicative f => (a -> f b) -> s -> f t
 
 traversedC :: Traversable t => Traversal a b (t a) (t b)
-traversedC = Traversal traverse
+traversedC = traverse
 
 bothC :: Traversal a b (a, a) (b, b)
-bothC = Traversal $ \t (a1, a2) -> (,) <$> t a1 <*> t a2
+bothC t (a1, a2) = (,) <$> t a1 <*> t a2
+
+sample1 :: [(Either Int Char, String)]
+sample1 = [(Left 1, "asd"), (Right 'a', "xxx"), (Left 7, "qwe")]
+
+sample2 :: [Either (Int, Int) [Char]]
+sample2 = [Left (4, 5), Right "hey", Left (1, 9)]

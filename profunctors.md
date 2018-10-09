@@ -113,14 +113,13 @@ Optics - traversal
 ==================
 
     !haskell
-    newtype Traversal a b s t =
-      Traversal (forall f. Applicative f => (a -> f b) -> s -> f t)
+    type Traversal a b s t = forall f. Applicative f => (a -> f b) -> s -> f t
 
     traversed :: Traversable t => Traversal a b (t a) (t b)
-    traversed = Traversal traverse
+    traversed = traverse
 
     both :: Traversal a b (a, a) (b, b)
-    both = Traversal $ \t (a1, a2) -> (,) <$> t a1 <*> t a2
+    both t (a1, a2) = (,) <$> t a1 <*> t a2
 
 -   Generalization of `traverse` from `Data.Traversable`.
 -   Allows us to
@@ -143,7 +142,7 @@ How do these optics relate to each other?
 -   every Lens is a Traversal
 -   every Prism is a Traversal
 
-How can we see that?
+How can we see that? Also, how can we make these optics composable with each other?
 
 ------------------------------------------------------------------------
 
@@ -272,7 +271,235 @@ All of them:
 This can be generalized to any functor `f`:
 
     !haskell
-    newtype UpStar f a b = UpStar { unUpStar :: a -> f b }
+    newtype Star f a b = Star { unStar :: a -> f b }
 
-    instance Functor f => Profunctor (UpStar f) where
-      dimap i o (UpStar f) = UpStar $ fmap o . f . i
+    instance Functor f => Profunctor (Star f) where
+      dimap i o (Star f) = UpStar $ fmap o . f . i
+
+----
+
+Cartesian profunctors
+========================
+
+    !haskell
+    class Profunctor p => Cartesian p where
+      first  :: p a b -> p (a, c) (b, c)
+      first = dimap swapP swapP . second
+
+      second :: p a b -> p (c, a) (c, b)
+      second = dimap swapP swapP . first
+
+    instance Cartesian (->) where
+      first :: (a -> b) -> (a, c) -> (b, c)
+      first f = f `cross` id
+
+    instance Functor f => Cartesian (Star f) where
+      first :: Star f a b -> Star f (a, c) (b, c)
+      first (Star f) = Star $ (\(fx, y) -> (, y) <$> fx) . (f `cross` id)
+
+    -- Helpers
+
+    swapP :: (a, b) -> (b, a)
+    swapP (a, b) = (b, a)
+    
+    cross :: (a -> c) -> (b -> d) -> (a, b) -> (c, d)
+    cross f g (x, y) = (f x, g y)
+
+Intuitively a profunctor is cartesian if it can be extended with additional
+context in the form of a pair.
+
+----
+
+Cocartesian profunctors
+======================
+
+    !haskell
+
+    class Profunctor p => Cocartesian p where
+      left :: p a b -> p (Either a c) (Either b c)
+      left = dimap swapE swapE . right
+    
+      right :: p a b -> p (Either c a) (Either c b)
+      right = dimap swapE swapE . left
+    
+    instance Cocartesian (->) where
+      left :: (a -> b) -> Either a c -> Either b c
+      left f = either (Left . f) Right
+    
+    instance Applicative f => Cocartesian (Star f) where
+      left :: Star f a b -> Star f (Either a c) (Either b c)
+      left (Star f) = Star $ either (fmap Left . f) (pure . Right)
+
+    -- Helpers
+    
+    swapE :: Either a b -> Either b a
+    swapE (Left a)  = Right a
+    swapE (Right a) = Left a
+
+Intuitively a profunctor is cocartesian if it can be extended to act on one part
+of the sum type while leaving the other part alone.
+
+----
+
+The Oddysey
+===========
+
+    !haskell
+
+    class Wander p where
+      wander :: (forall f. Applicative f => (a -> f b) -> s -> f t)
+             -> p a b
+             -> p s t
+    
+    instance Wander (->) where
+      wander :: ((a -> Identity b) -> s -> Identity t)
+             -> (a -> b)
+             -> (s -> t)
+      wander t f = runIdentity . t (Identity . f)
+    
+    instance Applicative f => Wander (Star f) where
+      wander :: ((a -> f b) -> s -> f t)
+             -> Star f a b
+             -> Star f s t
+      wander t (Star f) = Star (t f)
+
+----
+
+Profunctor optics
+=====================
+
+A profunctor optic is a transformation of profunctors.
+
+    !haskell
+
+    type Optic p a b s t = p a b -> p s t
+
+The previously mentioned optics in their profunctor encoding are as follows:
+
+    !haskell
+
+    type AdapterP a b s t =
+      forall p. Profunctor p => Optic p a b s t
+    
+    type LensP a b s t =
+      forall p. Cartesian p => Optic p a b s t
+    
+    type PrismP a b s t =
+      forall p. Cocartesian p => Optic p a b s t
+    
+    type TraversalP a b s t =
+      forall p. (Cartesian p, Cocartesian p, Wander p) => Optic p a b s t
+
+Now, let's prove that.
+
+----
+
+Profunctor optics - adapter
+==================================
+
+    !haskell
+
+    data Adapter a b s t = Adapter (s -> a) (b -> t)
+    
+    instance Profunctor (Adapter a b) where
+      dimap :: (s' -> s) -> (t -> t')  -> Adapter a b s t -> Adapter a b s' t'
+      dimap f g (Adapter from to) = Adapter (from . f) (g . to)
+    
+Conversions back and forth:
+
+    !haskell
+    
+    adapterP :: Adapter a b s t -> AdapterP a b s t
+    adapterP (Adapter from to) pab = dimap from to pab
+    
+    adapter :: forall a b s t. AdapterP a b s t -> Adapter a b s t
+    adapter l = l (Adapter id id :: Adapter a b a b)
+
+----
+
+Profunctor optics - lens
+======================
+
+    !haskell
+
+    data Lens a b s t = Lens (s -> a) (s -> b -> t)
+    
+    instance Profunctor (Lens a b) where
+      dimap :: (s' -> s) -> (t -> t') -> Lens a b s t -> Lens a b s' t'
+      dimap f g (Lens view update) = Lens (view . f)
+                                          (\s -> g . update (f s))
+    
+    instance Cartesian (Lens a b) where
+      first :: Lens a b s t -> Lens a b (s, c) (t, c)
+      first (Lens view update) = Lens (view . fst)
+                                      (\(s, c) b -> (update s b, c))
+
+Conversions back and forth:
+
+    !haskell
+
+    lensP :: forall a b s t. Lens a b s t -> LensP a b s t
+    lensP (Lens view update) pab = 
+      dimap (\s -> (view s, s)) (\(b, s) -> update s b)
+        (first pab :: _ (a, s) (b, s))
+    
+    lens :: LensP a b s t -> Lens a b s t
+    lens l = l (Lens id (\_ b -> b) :: Lens a b a b)
+
+----
+
+Profunctor optics - prism
+===========================
+
+    !haskell
+    
+    data Prism a b s t = Prism (s -> Either t a) (b -> t)
+    
+    instance Profunctor (Prism a b) where
+      dimap :: (s' -> s) -> (t -> t') -> Prism a b s t -> Prism a b s' t'
+      dimap f g (Prism match build) =
+        Prism (either (Left . g) Right . match . f)
+              (g . build)
+    
+    instance Cocartesian (Prism a b) where
+      left :: Prism a b s t -> Prism a b (Either s c) (Either t c)
+      left (Prism match build) =
+        Prism (either (either (Left . Left) Right . match) (Left . Right))
+              (Left . build)
+    
+Conversions back and forth:
+    
+    !haskell
+    
+    prismP :: forall a b s t. Prism a b s t -> PrismP a b s t
+    prismP (Prism match build) pab =
+      dimap match (either id build) (right pab :: _ (Either t a) (Either t b))
+    
+    prism :: forall a b s t. PrismP a b s t -> Prism a b s t
+    prism l = l (Prism Right id :: Prism a b a b)
+
+----
+
+Profunctor optics - traversal
+===============================
+
+    !haskell
+    
+    type Traversal a b s t = forall f. Applicative f => (a -> f b) -> s -> f t
+
+Conversions back and forth:
+
+    !haskell
+
+    traversalP :: Traversal a b s t -> TraversalP a b s t
+    traversalP = wander
+    
+    traversal :: TraversalP a b s t -> Traversal a b s t
+    traversal = traverseOf
+
+    -- Helpers
+    
+    traverseOf :: Applicative f
+               => Optic (Star f) a b s t
+               -> (a -> f b) -> s -> f t
+    traverseOf t = unStar . t . Star
