@@ -1,0 +1,8 @@
+digraph G {
+  graph [bgcolor="#ff000000"]
+  node [shape=oval]
+  Adapter -> Lens
+  Adapter -> Prism
+  Lens -> Traversal
+  Prism -> Traversal
+}

@@ -4,6 +4,177 @@ Profunctors and data accessors
 
 ----
 
+===========================
+Data accessors - motivation
+===========================
+
+The problem:
+
+Haskell doesn't have user friendly, available out of the box set of features for
+modification and access of nested data structures.
+
+Built-in record syntax is clunky to use and doesn't compose well.
+
+Solution: lenses
+
+...and adapters, prisms, traversals etc.
+
+The whole family of these is known as optics.
+
+----
+
+===========================
+Data accessors - encodings
+===========================
+
+- Concrete (tutorials)
+
+  * Easy to understand
+  * Don't compose well (what is composition of a lens and a prism?)
+
+- Van Laarhoven (lens library)
+
+  * Composable
+  * Lenses and traversals don't require anything other than base library
+  * Convoluted types
+  * The hierarchy of optics is not clear from the types
+
+- Profunctor (purescript-profunctor-lenses library)
+
+  * Composable
+  * Require profunctors
+  * Types still somewhat convoluted
+  * Hierarchy of optics is clear from the types
+
+----
+
+================
+Optics - adapter
+================
+
+
+::
+
+   !haskell
+   data Adapter a b s t = Adapter { from :: s -> a
+                                  , to   :: b -> t
+                                  }
+
+   _text :: Adapter T.Text T.Text String String
+   _text = Adapter T.pack T.unpack
+
+- Also known as Iso (lens library)
+
+- Provides a way to convert back and forth between the types.
+
+- Usually an isomorphism, although we don't enforce it here.
+
+----
+
+=============
+Optics - lens
+=============
+
+Lens is a pair of two functions, a getter and a setter (updater).
+
+::
+
+   !haskell
+   data Lens a b s t = Lens { view   :: s -> a
+                            , update :: s -> b -> t
+                            }
+
+   _fst :: Lens a b (a, c) (b, c)
+   _fst = Lens fst (\(_, c) b -> (b, c))
+
+   _snd :: Lens a b (c, a) (c, b)
+   _snd = Lens snd (\(c, _) b -> (c, b))
+
+- Allows us to
+
+  * view a value contained within a larger data structure,
+  * update a specific part of it.
+
+- Deals with product types.
+
+----
+
+==============
+Optics - prism
+==============
+
+::
+
+   !haskell
+   data Prism a b s t = Prism { match :: s -> Either t a
+                              , build :: b -> t
+                              }
+
+   _Left :: Prism a b (Either a c) (Either b c)
+   _Left = Prism match Left
+     where
+       match (Left a)  = Right a
+       match (Right t) = Left (Right t)
+
+   _Right :: Prism a b (Either c a) (Either c b)
+   _Right = Prism match Right
+     where
+       match (Left t)  = Left (Left t)
+       match (Right a) = Right a
+
+- Allows us to
+
+  * match on a value possibly contained within a larger data structure,
+  * build the data structure back from a specific value.
+
+- Deals with sum types.
+
+----
+
+==================
+Optics - traversal
+==================
+
+::
+
+   !haskell
+   newtype Traversal a b s t =
+     Traversal (forall f. Applicative f => (a -> f b) -> s -> f t)
+
+   traversed :: Traversable t => Traversal a b (t a) (t b)
+   traversed = Traversal traverse
+
+   both :: Traversal a b (a, a) (b, b)
+   both = Traversal $ \t (a1, a2) -> (,) <$> t a1 <*> t a2
+
+- Generalization of `traverse` from `Data.Traversable`.
+
+- Allows us to
+
+  * match and/or modify multiple values possibly contained within a larger data structure in a predefined order,
+  * apply effects specific to `f`.
+
+- Deals with a sequence of values of any type.
+
+----
+
+==================
+Optics - hierarchy
+==================
+
+How do these optics relate to each other?
+
+.. image:: hierarchy.svg
+     :width: 300px
+
+* every Adapter is a Lens
+* every Adapter is a Prism
+* every Lens is a Traversal
+* every Prism is a Traversal
+
+
+----
+
 ===========
 Profunctor
 ===========

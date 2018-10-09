@@ -49,7 +49,7 @@
     </div>
     <div class="slides">
       
-      <!-- slide source: profunctors.rst -->
+      <!-- slide source: profunctors.md -->
       <div class="slide-wrapper">
         <div class="slide slide-1">
           <div class="inner">
@@ -67,25 +67,31 @@
           <footer>
             
             <aside class="source">
-              Source: <a href="profunctors.rst">profunctors.rst</a>
+              Source: <a href="profunctors.md">profunctors.md</a>
             </aside>
             
             <aside class="page_number">
-              1/7
+              1/14
             </aside>
           </footer>
         </div>
       </div>
       
-      <!-- slide source: profunctors.rst -->
+      <!-- slide source: profunctors.md -->
       <div class="slide-wrapper">
         <div class="slide slide-2">
           <div class="inner">
             
-            <header><h1>Profunctor</h1></header>
+            <header><h1>Data accessors - motivation</h1></header>
             
             
-            <section><p>Represented by a type class. In order to arrive at the definition, we need to backtrack a little bit.</p></section>
+            <section><p>The problem:</p>
+<p>Haskell doesn't have user friendly, available out of the box set of
+features for modification and access of nested data structures.</p>
+<p>Built-in record syntax is clunky to use and doesn't compose well.</p>
+<p>Solution: lenses</p>
+<p>...and adapters, prisms, traversals etc.</p>
+<p>The whole family of these is known as optics.</p></section>
             
           </div>
           <div class="presenter_notes">
@@ -97,19 +103,334 @@
           <footer>
             
             <aside class="source">
-              Source: <a href="profunctors.rst">profunctors.rst</a>
+              Source: <a href="profunctors.md">profunctors.md</a>
             </aside>
             
             <aside class="page_number">
-              2/7
+              2/14
             </aside>
           </footer>
         </div>
       </div>
       
-      <!-- slide source: profunctors.rst -->
+      <!-- slide source: profunctors.md -->
       <div class="slide-wrapper">
-        <div class="slide has_code slide-3">
+        <div class="slide slide-3">
+          <div class="inner">
+            
+            <header><h1>Data accessors - encodings</h1></header>
+            
+            
+            <section><ul>
+<li>Concrete (tutorials)<ul>
+<li>Easy to understand</li>
+<li>Don't compose well (what is composition of a lens and a prism?)</li>
+</ul>
+</li>
+<li>Van Laarhoven (lens library)<ul>
+<li>Composable</li>
+<li>Lenses and traversals don't require anything other than base
+    library</li>
+<li>Convoluted types</li>
+<li>The hierarchy of optics is not clear from the types</li>
+</ul>
+</li>
+<li>Profunctor (purescript-profunctor-lenses library)<ul>
+<li>Composable</li>
+<li>Require profunctors</li>
+<li>Types still somewhat convoluted</li>
+<li>Hierarchy of optics is clear from the types</li>
+</ul>
+</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.md">profunctors.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              3/14
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-4">
+          <div class="inner">
+            
+            <header><h1>Optics - adapter</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span></span><span class="kr">data</span> <span class="kt">Adapter</span> <span class="n">a</span> <span class="n">b</span> <span class="n">s</span> <span class="n">t</span> <span class="ow">=</span> <span class="kt">Adapter</span> <span class="p">{</span> <span class="n">from</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+                               <span class="p">,</span> <span class="n">to</span>   <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">t</span>
+                               <span class="p">}</span>
+
+<span class="nf">_text</span> <span class="ow">::</span> <span class="kt">Adapter</span> <span class="kt">T</span><span class="o">.</span><span class="kt">Text</span> <span class="kt">T</span><span class="o">.</span><span class="kt">Text</span> <span class="kt">String</span> <span class="kt">String</span>
+<span class="nf">_text</span> <span class="ow">=</span> <span class="kt">Adapter</span> <span class="kt">T</span><span class="o">.</span><span class="n">pack</span> <span class="kt">T</span><span class="o">.</span><span class="n">unpack</span>
+</pre></div>
+
+<ul>
+<li>Also known as Iso (lens library).</li>
+<li>Provides a way to convert back and forth between the types.</li>
+<li>Usually an isomorphism, although we don't enforce it here.</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.md">profunctors.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              4/14
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-5">
+          <div class="inner">
+            
+            <header><h1>Optics - lens</h1></header>
+            
+            
+            <section><p>Lens is a pair of two functions, a getter and a setter (updater).</p>
+<div class="highlight"><pre><span></span><span class="kr">data</span> <span class="kt">Lens</span> <span class="n">a</span> <span class="n">b</span> <span class="n">s</span> <span class="n">t</span> <span class="ow">=</span> <span class="kt">Lens</span> <span class="p">{</span> <span class="n">view</span>   <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+                         <span class="p">,</span> <span class="n">update</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">t</span>
+                         <span class="p">}</span>
+
+<span class="nf">_fst</span> <span class="ow">::</span> <span class="kt">Lens</span> <span class="n">a</span> <span class="n">b</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="nf">_fst</span> <span class="ow">=</span> <span class="kt">Lens</span> <span class="n">fst</span> <span class="p">(</span><span class="nf">\</span><span class="p">(</span><span class="kr">_</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+
+<span class="nf">_snd</span> <span class="ow">::</span> <span class="kt">Lens</span> <span class="n">a</span> <span class="n">b</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="nf">_snd</span> <span class="ow">=</span> <span class="kt">Lens</span> <span class="n">snd</span> <span class="p">(</span><span class="nf">\</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="kr">_</span><span class="p">)</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+</pre></div>
+
+<ul>
+<li>Allows us to<ul>
+<li>view a value contained within a larger data structure,</li>
+<li>update a specific part of it.</li>
+</ul>
+</li>
+<li>Deals with product types.</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.md">profunctors.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              5/14
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-6">
+          <div class="inner">
+            
+            <header><h1>Optics - prism</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span></span><span class="kr">data</span> <span class="kt">Prism</span> <span class="n">a</span> <span class="n">b</span> <span class="n">s</span> <span class="n">t</span> <span class="ow">=</span> <span class="kt">Prism</span> <span class="p">{</span> <span class="n">match</span> <span class="ow">::</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="kt">Either</span> <span class="n">t</span> <span class="n">a</span>
+                           <span class="p">,</span> <span class="n">build</span> <span class="ow">::</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">t</span>
+                           <span class="p">}</span>
+
+<span class="nf">_Left</span> <span class="ow">::</span> <span class="kt">Prism</span> <span class="n">a</span> <span class="n">b</span> <span class="p">(</span><span class="kt">Either</span> <span class="n">a</span> <span class="n">c</span><span class="p">)</span> <span class="p">(</span><span class="kt">Either</span> <span class="n">b</span> <span class="n">c</span><span class="p">)</span>
+<span class="nf">_Left</span> <span class="ow">=</span> <span class="kt">Prism</span> <span class="n">match</span> <span class="kt">Left</span>
+  <span class="kr">where</span>
+    <span class="n">match</span> <span class="p">(</span><span class="kt">Left</span> <span class="n">a</span><span class="p">)</span>  <span class="ow">=</span> <span class="kt">Right</span> <span class="n">a</span>
+    <span class="n">match</span> <span class="p">(</span><span class="kt">Right</span> <span class="n">t</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">Left</span> <span class="p">(</span><span class="kt">Right</span> <span class="n">t</span><span class="p">)</span>
+
+<span class="nf">_Right</span> <span class="ow">::</span> <span class="kt">Prism</span> <span class="n">a</span> <span class="n">b</span> <span class="p">(</span><span class="kt">Either</span> <span class="n">c</span> <span class="n">a</span><span class="p">)</span> <span class="p">(</span><span class="kt">Either</span> <span class="n">c</span> <span class="n">b</span><span class="p">)</span>
+<span class="nf">_Right</span> <span class="ow">=</span> <span class="kt">Prism</span> <span class="n">match</span> <span class="kt">Right</span>
+  <span class="kr">where</span>
+    <span class="n">match</span> <span class="p">(</span><span class="kt">Left</span> <span class="n">t</span><span class="p">)</span>  <span class="ow">=</span> <span class="kt">Left</span> <span class="p">(</span><span class="kt">Left</span> <span class="n">t</span><span class="p">)</span>
+    <span class="n">match</span> <span class="p">(</span><span class="kt">Right</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">Right</span> <span class="n">a</span>
+</pre></div>
+
+<ul>
+<li>Allows us to<ul>
+<li>match on a value possibly contained within a larger data
+    structure,</li>
+<li>build the data structure back from a specific value.</li>
+</ul>
+</li>
+<li>Deals with sum types.</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.md">profunctors.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              6/14
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-7">
+          <div class="inner">
+            
+            <header><h1>Optics - traversal</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span></span><span class="kr">newtype</span> <span class="kt">Traversal</span> <span class="n">a</span> <span class="n">b</span> <span class="n">s</span> <span class="n">t</span> <span class="ow">=</span>
+  <span class="kt">Traversal</span> <span class="p">(</span><span class="n">forall</span> <span class="n">f</span><span class="o">.</span> <span class="kt">Applicative</span> <span class="n">f</span> <span class="ow">=&gt;</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">s</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">t</span><span class="p">)</span>
+
+<span class="nf">traversed</span> <span class="ow">::</span> <span class="kt">Traversable</span> <span class="n">t</span> <span class="ow">=&gt;</span> <span class="kt">Traversal</span> <span class="n">a</span> <span class="n">b</span> <span class="p">(</span><span class="n">t</span> <span class="n">a</span><span class="p">)</span> <span class="p">(</span><span class="n">t</span> <span class="n">b</span><span class="p">)</span>
+<span class="nf">traversed</span> <span class="ow">=</span> <span class="kt">Traversal</span> <span class="n">traverse</span>
+
+<span class="nf">both</span> <span class="ow">::</span> <span class="kt">Traversal</span> <span class="n">a</span> <span class="n">b</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="nf">both</span> <span class="ow">=</span> <span class="kt">Traversal</span> <span class="o">$</span> <span class="nf">\</span><span class="n">t</span> <span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(,)</span> <span class="o">&lt;$&gt;</span> <span class="n">t</span> <span class="n">a1</span> <span class="o">&lt;*&gt;</span> <span class="n">t</span> <span class="n">a2</span>
+</pre></div>
+
+<ul>
+<li>Generalization of <code>traverse</code> from <code>Data.Traversable</code>.</li>
+<li>Allows us to<ul>
+<li>match and/or modify multiple values possibly contained within a
+    larger data structure in a predefined order,</li>
+<li>apply effects specific to <code>f</code>.</li>
+</ul>
+</li>
+<li>Deals with a sequence of values of any type.</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.md">profunctors.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              7/14
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.md -->
+      <div class="slide-wrapper">
+        <div class="slide slide-8">
+          <div class="inner">
+            
+            <header><h1>Optics - hierarchy</h1></header>
+            
+            
+            <section><p>How do these optics relate to each other?</p>
+<p><img alt="image" src="file:///home/unknown/Programowanie/haskellx18/hierarchy.svg" /></p>
+<ul>
+<li>every Adapter is a Lens</li>
+<li>every Adapter is a Prism</li>
+<li>every Lens is a Traversal</li>
+<li>every Prism is a Traversal</li>
+</ul>
+<p>How can we see that?</p></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.md">profunctors.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              8/14
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.md -->
+      <div class="slide-wrapper">
+        <div class="slide slide-9">
+          <div class="inner">
+            
+            <header><h1>Profunctor</h1></header>
+            
+            
+            <section><p>Represented by a type class. In order to arrive at the definition, we
+need to backtrack a little bit.</p></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="profunctors.md">profunctors.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              9/14
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: profunctors.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code slide-10">
           <div class="inner">
             
             <header><h1>Covariant functor</h1></header>
@@ -120,12 +441,13 @@
   <span class="n">fmap</span> <span class="ow">::</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">b</span>
 </pre></div>
 
-<ul class="simple">
-<li>Intuitively <cite>f a</cite> will <strong>output</strong> values of type <cite>a</cite> in a context specific to <cite>f</cite>.</li>
-<li><cite>fmap</cite> allows us to map over <cite>f</cite> to change the type of its <strong>output</strong>.</li>
-<li>We say that the argument <cite>a</cite> in <cite>f a</cite> is covariant.</li>
+<ul>
+<li>Intuitively <code>f a</code> will <strong>output</strong> values of type <code>a</code> in a context specific
+    to <code>f</code>.</li>
+<li><code>fmap</code> allows us to map over <code>f</code> to change the type of its <strong>output</strong>.</li>
+<li>We say that the argument <code>a</code> in <code>f a</code> is covariant.</li>
 </ul>
-<p>Examples: <cite>Identity</cite>, <cite>Maybe</cite>, <cite>IO</cite>, <cite>Either a</cite>.</p></section>
+<p>Examples: <code>Identity</code>, <code>Maybe</code>, <code>IO</code>, <code>Either a</code>.</p></section>
             
           </div>
           <div class="presenter_notes">
@@ -137,19 +459,19 @@
           <footer>
             
             <aside class="source">
-              Source: <a href="profunctors.rst">profunctors.rst</a>
+              Source: <a href="profunctors.md">profunctors.md</a>
             </aside>
             
             <aside class="page_number">
-              3/7
+              10/14
             </aside>
           </footer>
         </div>
       </div>
       
-      <!-- slide source: profunctors.rst -->
+      <!-- slide source: profunctors.md -->
       <div class="slide-wrapper">
-        <div class="slide has_code slide-4">
+        <div class="slide has_code slide-11">
           <div class="inner">
             
             <header><h1>Contravariant functor</h1></header>
@@ -160,10 +482,14 @@
   <span class="n">contramap</span> <span class="ow">::</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">a</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">b</span>
 </pre></div>
 
-<ul class="simple">
-<li>Intuitively <cite>f a</cite> will take values of type <cite>a</cite> as an <strong>input</strong> in a context specific to <cite>f</cite>.</li>
-<li><cite>contramap</cite> allows us to map over <cite>f</cite> to change the type of its <strong>input</strong>.</li>
-<li>We say that the argument <cite>a</cite> in <cite>f a</cite> is contravariant.</li>
+<ul>
+<li>Intuitively <code>f a</code> will take values of type
+    <code>a</code> as an <strong>input</strong> in a context specific to
+    <code>f</code>.</li>
+<li><code>contramap</code> allows us to map over <code>f</code> to
+    change the type of its <strong>input</strong>.</li>
+<li>We say that the argument <code>a</code> in <code>f a</code> is
+    contravariant.</li>
 </ul>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><span class="kr">newtype</span> <span class="kt">Pred</span> <span class="n">a</span> <span class="ow">=</span> <span class="kt">Pred</span> <span class="p">{</span> <span class="n">runPred</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span> <span class="p">}</span>
@@ -189,19 +515,19 @@
           <footer>
             
             <aside class="source">
-              Source: <a href="profunctors.rst">profunctors.rst</a>
+              Source: <a href="profunctors.md">profunctors.md</a>
             </aside>
             
             <aside class="page_number">
-              4/7
+              11/14
             </aside>
           </footer>
         </div>
       </div>
       
-      <!-- slide source: profunctors.rst -->
+      <!-- slide source: profunctors.md -->
       <div class="slide-wrapper">
-        <div class="slide has_code slide-5">
+        <div class="slide has_code slide-12">
           <div class="inner">
             
             <header><h1>Profunctor</h1></header>
@@ -211,8 +537,12 @@
   <span class="n">dimap</span> <span class="ow">::</span> <span class="p">(</span><span class="n">a&#39;</span> <span class="ow">-&gt;</span> <span class="n">a</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">b&#39;</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">p</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">p</span> <span class="n">a&#39;</span> <span class="n">b&#39;</span>
 </pre></div>
 
-<p>An instance of a profunctor is a type <cite>p a b</cite> where the first argument is contravariant and the second argument is covariant.</p>
-<p>Intuitively it is a transformer that consumes values of type <cite>a</cite> and produces values of type <cite>b</cite>.</p>
+<ul>
+<li>An instance of a profunctor is a type <code>p a b</code> where the first argument is
+contravariant and the second argument is covariant.</li>
+<li>Intuitively it is a transformer that consumes values of type
+<code>a</code> and produces values of type <code>b</code>.</li>
+</ul>
 <p>Canonical example:</p>
 <div class="highlight"><pre><span></span><span class="kr">instance</span> <span class="kt">Profunctor</span> <span class="p">(</span><span class="ow">-&gt;</span><span class="p">)</span> <span class="kr">where</span>
   <span class="n">dimap</span> <span class="n">i</span> <span class="n">o</span> <span class="n">f</span> <span class="ow">=</span> <span class="n">o</span> <span class="o">.</span> <span class="n">f</span> <span class="o">.</span> <span class="n">i</span>
@@ -237,19 +567,19 @@
           <footer>
             
             <aside class="source">
-              Source: <a href="profunctors.rst">profunctors.rst</a>
+              Source: <a href="profunctors.md">profunctors.md</a>
             </aside>
             
             <aside class="page_number">
-              5/7
+              12/14
             </aside>
           </footer>
         </div>
       </div>
       
-      <!-- slide source: profunctors.rst -->
+      <!-- slide source: profunctors.md -->
       <div class="slide-wrapper">
-        <div class="slide has_code slide-6">
+        <div class="slide has_code slide-13">
           <div class="inner">
             
             <header><h1>Functors that went pro</h1></header>
@@ -272,19 +602,19 @@
           <footer>
             
             <aside class="source">
-              Source: <a href="profunctors.rst">profunctors.rst</a>
+              Source: <a href="profunctors.md">profunctors.md</a>
             </aside>
             
             <aside class="page_number">
-              6/7
+              13/14
             </aside>
           </footer>
         </div>
       </div>
       
-      <!-- slide source: profunctors.rst -->
+      <!-- slide source: profunctors.md -->
       <div class="slide-wrapper">
-        <div class="slide has_code slide-7">
+        <div class="slide has_code slide-14">
           <div class="inner">
             
             <header><h1>Functors that went pro</h1></header>
@@ -307,7 +637,7 @@
   <span class="n">dimap</span> <span class="n">i</span> <span class="kr">_</span> <span class="p">(</span><span class="kt">P3</span> <span class="n">f</span><span class="p">)</span> <span class="ow">=</span> <span class="kt">P3</span> <span class="o">$</span> <span class="n">f</span> <span class="o">.</span> <span class="n">i</span>
 </pre></div>
 
-<p>This can be generalized to any functor <cite>f</cite>:</p>
+<p>This can be generalized to any functor <code>f</code>:</p>
 <div class="highlight"><pre><span></span><span class="kr">newtype</span> <span class="kt">UpStar</span> <span class="n">f</span> <span class="n">a</span> <span class="n">b</span> <span class="ow">=</span> <span class="kt">UpStar</span> <span class="p">{</span> <span class="n">unUpStar</span> <span class="ow">::</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">f</span> <span class="n">b</span> <span class="p">}</span>
 
 <span class="kr">instance</span> <span class="kt">Functor</span> <span class="n">f</span> <span class="ow">=&gt;</span> <span class="kt">Profunctor</span> <span class="p">(</span><span class="kt">UpStar</span> <span class="n">f</span><span class="p">)</span> <span class="kr">where</span>
@@ -325,11 +655,11 @@
           <footer>
             
             <aside class="source">
-              Source: <a href="profunctors.rst">profunctors.rst</a>
+              Source: <a href="profunctors.md">profunctors.md</a>
             </aside>
             
             <aside class="page_number">
-              7/7
+              14/14
             </aside>
           </footer>
         </div>
@@ -350,38 +680,80 @@
       
       
       <tr id="toc-row-2">
-        <th><a href="#slide2">Profunctor</a></th>
+        <th><a href="#slide2">Data accessors - motivation</a></th>
         <td><a href="#slide2">2</a></td>
       </tr>
       
       
       <tr id="toc-row-3">
-        <th><a href="#slide3">Covariant functor</a></th>
+        <th><a href="#slide3">Data accessors - encodings</a></th>
         <td><a href="#slide3">3</a></td>
       </tr>
       
       
       <tr id="toc-row-4">
-        <th><a href="#slide4">Contravariant functor</a></th>
+        <th><a href="#slide4">Optics - adapter</a></th>
         <td><a href="#slide4">4</a></td>
       </tr>
       
       
       <tr id="toc-row-5">
-        <th><a href="#slide5">Profunctor</a></th>
+        <th><a href="#slide5">Optics - lens</a></th>
         <td><a href="#slide5">5</a></td>
       </tr>
       
       
       <tr id="toc-row-6">
-        <th><a href="#slide6">Functors that went pro</a></th>
+        <th><a href="#slide6">Optics - prism</a></th>
         <td><a href="#slide6">6</a></td>
       </tr>
       
       
       <tr id="toc-row-7">
-        <th><a href="#slide7">Functors that went pro</a></th>
+        <th><a href="#slide7">Optics - traversal</a></th>
         <td><a href="#slide7">7</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-8">
+        <th><a href="#slide8">Optics - hierarchy</a></th>
+        <td><a href="#slide8">8</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-9">
+        <th><a href="#slide9">Profunctor</a></th>
+        <td><a href="#slide9">9</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-10">
+        <th><a href="#slide10">Covariant functor</a></th>
+        <td><a href="#slide10">10</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-11">
+        <th><a href="#slide11">Contravariant functor</a></th>
+        <td><a href="#slide11">11</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-12">
+        <th><a href="#slide12">Profunctor</a></th>
+        <td><a href="#slide12">12</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-13">
+        <th><a href="#slide13">Functors that went pro</a></th>
+        <td><a href="#slide13">13</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-14">
+        <th><a href="#slide14">Functors that went pro</a></th>
+        <td><a href="#slide14">14</a></td>
       </tr>
       
       

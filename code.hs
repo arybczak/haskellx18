@@ -13,7 +13,6 @@ import Data.Kind
 import Data.Functor.Const
 import Data.Functor.Identity
 import Data.Monoid
-import Data.Tuple
 import qualified Data.Text as T
 
 import Prelude -- hiding (Functor(..))
@@ -82,6 +81,9 @@ instance Functor f => Profunctor (Star f) where
 
 ----
 
+swapP :: (a, b) -> (b, a)
+swapP (a, b) = (b, a)
+
 cross :: (a -> c) -> (b -> d) -> (a, b) -> (c, d)
 cross f g (x, y) = (f x, g y)
 
@@ -90,48 +92,42 @@ cross f g (x, y) = (f x, g y)
 
 class Profunctor p => Cartesian p where
   first  :: p a b -> p (a, c) (b, c)
-  first = dimap swap swap . second
+  first = dimap swapP swapP . second
 
   second :: p a b -> p (c, a) (c, b)
-  second = dimap swap swap . first
+  second = dimap swapP swapP . first
 
 instance Cartesian (->) where
   first :: (a -> b) -> (a, c) -> (b, c)
   first f = f `cross` id
 
-  second :: (a -> b) -> (c, a) -> (c, b)
-  second f = id `cross` f
-
 instance Functor f => Cartesian (Star f) where
   first :: Star f a b -> Star f (a, c) (b, c)
   first (Star f) = Star $ (\(fx, y) -> (, y) <$> fx) . (f `cross` id)
-
-  second :: Star f a b -> Star f (c, a) (c, b)
-  --second (Star f) = Star $ (\(x, fy) -> (x, ) <$> fy) . (id `cross` f)
-  second = dimap swap swap . first
 
 ----
 
 -- Intuitively a profunctor is cocartesian if it can act on one part of the sum
 -- type while leaving the other part alone.
 
+swapE :: Either a b -> Either b a
+swapE (Left a)  = Right a
+swapE (Right a) = Left a
+
 class Profunctor p => Cocartesian p where
   left  :: p a b -> p (Either a c) (Either b c)
+  left = dimap swapE swapE . right
+
   right :: p a b -> p (Either c a) (Either c b)
+  right = dimap swapE swapE . left
 
 instance Cocartesian (->) where
   left :: (a -> b) -> Either a c -> Either b c
-  left  f = either (Left . f) Right
-
-  right :: (a -> b) -> Either c a -> Either c b
-  right f = either Left (Right . f)
+  left f = either (Left . f) Right
 
 instance Applicative f => Cocartesian (Star f) where
   left :: Star f a b -> Star f (Either a c) (Either b c)
-  left  (Star f) = Star $ either (fmap Left . f) (pure . Right)
-
-  right :: Star f a b -> Star f (Either c a) (Either c b)
-  right (Star f) = Star $ either (pure . Left) (fmap Right . f)
+  left (Star f) = Star $ either (fmap Left . f) (pure . Right)
 
 ----
 
@@ -181,9 +177,6 @@ instance Cartesian (Lens a b) where
   first :: Lens a b s t -> Lens a b (s, c) (t, c)
   first (Lens view update) = Lens (view . fst) (\(s, c) b -> (update s b, c))
 
-  second :: Lens a b s t -> Lens a b (c, s) (c, t)
-  second (Lens view update) = Lens (view . snd) (\(c, s) b -> (c, update s b))
-
 lensP :: forall a b s t. Lens a b s t -> LensP a b s t
 lensP (Lens view update) pab =
   dimap (\s -> (view s, s)) (\(b, s) -> update s b) (first pab :: _ (a, s) (b, s))
@@ -215,12 +208,9 @@ instance Cocartesian (Prism a b) where
   left (Prism match build) =
     Prism (either (either (Left . Left) Right . match) (Left . Right)) (Left . build)
 
-  right :: Prism a b s t -> Prism a b (Either c s) (Either c t)
-  right (Prism match build) =
-    Prism (either (Left . Left) (either (Left . Right) Right . match)) (Right . build)
-
-prismP :: Prism a b s t -> PrismP a b s t
-prismP (Prism match build) = dimap match (either id build) . right
+prismP :: forall a b s t. Prism a b s t -> PrismP a b s t
+prismP (Prism match build) pab =
+  dimap match (either id build) (right pab :: _ (Either t a) (Either t b))
 
 prism :: forall a b s t. PrismP a b s t -> Prism a b s t
 prism l = l (Prism Right id :: Prism a b a b)
@@ -264,3 +254,14 @@ type PrismP a b s t = forall p. Cocartesian p => Optic p a b s t
 type TraversalP a b s t = forall p. Wander p => Optic p a b s t
 
 --type Getter s t a b = Optic (Star (Const a)) s t a b
+
+----
+
+newtype Traversal a b s t =
+  Traversal (forall f. Applicative f => (a -> f b) -> s -> f t)
+
+traversedC :: Traversable t => Traversal a b (t a) (t b)
+traversedC = Traversal traverse
+
+bothC :: Traversal a b (a, a) (b, b)
+bothC = Traversal $ \t (a1, a2) -> (,) <$> t a1 <*> t a2
