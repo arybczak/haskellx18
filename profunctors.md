@@ -52,6 +52,9 @@ Optics - adapter
     _text :: Adapter T.Text T.Text String String
     _text = Adapter T.pack T.unpack
 
+    _Sum :: Adapter (Sum a) (Sum b) a b
+    _Sum = Adapter Sum getSum
+
 -   Also known as Iso (lens library).
 -   Provides a way to convert back and forth between the types.
 -   Usually an isomorphism, although we don't enforce it here.
@@ -274,7 +277,7 @@ This can be generalized to any functor `f`:
     newtype Star f a b = Star { unStar :: a -> f b }
 
     instance Functor f => Profunctor (Star f) where
-      dimap i o (Star f) = UpStar $ fmap o . f . i
+      dimap i o (Star f) = Star $ fmap o . f . i
 
 ----
 
@@ -283,7 +286,7 @@ Cartesian profunctors
 
     !haskell
     class Profunctor p => Cartesian p where
-      first  :: p a b -> p (a, c) (b, c)
+      first :: p a b -> p (a, c) (b, c)
       first = dimap swapP swapP . second
 
       second :: p a b -> p (c, a) (c, b)
@@ -346,7 +349,7 @@ The Oddysey
 
     !haskell
 
-    class Wander p where
+    class (Cartesian p, Cocartesian p) => Wander p where
       wander :: (forall f. Applicative f => (a -> f b) -> s -> f t)
              -> p a b
              -> p s t
@@ -388,7 +391,7 @@ The previously mentioned optics in their profunctor encoding are as follows:
       forall p. Cocartesian p => Optic p a b s t
     
     type TraversalP a b s t =
-      forall p. (Cartesian p, Cocartesian p, Wander p) => Optic p a b s t
+      forall p. Wander p => Optic p a b s t
 
 Now, let's prove that.
 
@@ -503,3 +506,15 @@ Conversions back and forth:
                => Optic (Star f) a b s t
                -> (a -> f b) -> s -> f t
     traverseOf t = unStar . t . Star
+
+----
+
+Summary
+=======
+
+Further reading:
+
+-  Profunctor Optics: Modular Data Accessors (Matthew Pickering, Jeremy Gibbons, Nicolas Wu) - https://arxiv.org/abs/1703.10857
+- Glassery (Oleg Genrus) - http://oleg.fi/gists/posts/2017-04-18-glassery.html
+
+Slides and code available at https://github.com/arybczak.

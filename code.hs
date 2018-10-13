@@ -131,7 +131,7 @@ instance Applicative f => Cocartesian (Star f) where
 
 ----
 
-class Wander p where
+class (Cartesian p, Cocartesian p) => Wander p where
   wander :: (forall f. Applicative f => (a -> f b) -> s -> f t)
          -> p a b
          -> p s t
@@ -164,6 +164,15 @@ adapter l = l (Adapter id id :: Adapter a b a b)
 
 text :: AdapterP T.Text T.Text String String
 text = adapterP $ Adapter T.pack T.unpack
+
+_Sum :: AdapterP (Sum a) (Sum b) a b
+_Sum = adapterP $ Adapter Sum getSum
+
+_Product :: AdapterP (Product a) (Product b) a b
+_Product = adapterP $ Adapter Product getProduct
+
+_First :: AdapterP (First a) (First b) (Maybe a) (Maybe b)
+_First = adapterP $ Adapter First getFirst
 
 ----
 
@@ -230,6 +239,7 @@ _Right = prismP $ Prism match Right
     match (Left t)  = Left (Left t)
     match (Right a) = Right a
 
+
 ----
 
 traversalP :: Traversal a b s t -> TraversalP a b s t
@@ -257,7 +267,7 @@ type LensP a b s t = forall p. Cartesian p => Optic p a b s t
 
 type PrismP a b s t = forall p. Cocartesian p => Optic p a b s t
 
-type TraversalP a b s t = forall p. (Cartesian p, Cocartesian p, Wander p) => Optic p a b s t
+type TraversalP a b s t = forall p. Wander p => Optic p a b s t
 
 ----
 
@@ -274,3 +284,11 @@ sample1 = [(Left 1, "asd"), (Right 'a', "xxx"), (Left 7, "qwe")]
 
 sample2 :: [Either (Int, Int) [Char]]
 sample2 = [Left (4, 5), Right "hey", Left (1, 9)]
+
+-- _fst
+-- _fst . _Left
+-- viewl
+-- preview
+
+-- sample1
+-- sample2
